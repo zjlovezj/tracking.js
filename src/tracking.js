@@ -245,9 +245,26 @@
 // it seems all handled in the tracking.TrackerTask..
 // so in short, remove the tracking.TrackerTask from here
 // if the user want to use it, it can create it himself
-    var requestId;
-    var requestAnimationFrame_ = function() {
-      requestId = window.requestAnimationFrame(function() {
+    // var requestId;
+    // var requestAnimationFrame_ = function() {
+    //   requestId = window.requestAnimationFrame(function() {
+    //     if (element.readyState === element.HAVE_ENOUGH_DATA) {
+    //       try {
+    //         // Firefox v~30.0 gets confused with the video readyState firing an
+    //         // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
+    //         // hence keep trying to read it until resolved.
+    //         context.drawImage(element, 0, 0, width, height);
+    //       } catch (err) {}
+    //       tracking.trackCanvasInternal_(canvas, tracker);
+    //     }
+    //     requestAnimationFrame_();
+    //   });
+    // };
+
+    // ****
+    var stopTask = false;
+    var doTask = function() {
+      setTimeout(function() {
         if (element.readyState === element.HAVE_ENOUGH_DATA) {
           try {
             // Firefox v~30.0 gets confused with the video readyState firing an
@@ -257,16 +274,23 @@
           } catch (err) {}
           tracking.trackCanvasInternal_(canvas, tracker);
         }
-        requestAnimationFrame_();
-      });
+        console.log(Date.now());
+        if(!stopTask) {
+          setTimeout(doTask, 1000);
+        }
+      }, 1000);
     };
+    // ***
 
     var task = new tracking.TrackerTask(tracker);
     task.on('stop', function() {
-      window.cancelAnimationFrame(requestId);
+      // window.cancelAnimationFrame(requestId);
+      stopTask = true;
     });
     task.on('run', function() {
-      requestAnimationFrame_();
+      // requestAnimationFrame_();
+      stopTask = false;
+      doTask();
     });
     return task.run();
   };
